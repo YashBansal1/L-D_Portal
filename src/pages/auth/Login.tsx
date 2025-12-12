@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { login } from '../../store/authSlice';
 import { Lock, User, Shield, ShieldAlert } from 'lucide-react';
@@ -7,6 +7,7 @@ import GlassCard from '../../components/common/GlassCard';
 
 const Login = () => {
     const [email, setEmail] = useState('employee@example.com');
+    const [password, setPassword] = useState('');
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const location = useLocation();
@@ -22,12 +23,14 @@ const Login = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        dispatch(login(email));
+        dispatch(login({ email, password }));
     };
 
     const handleQuickLogin = (roleEmail: string) => {
         setEmail(roleEmail);
-        dispatch(login(roleEmail));
+        setPassword('');
+        // Quick login users don't have passwords in mock DB
+        dispatch(login({ email: roleEmail }));
     };
 
     return (
@@ -60,6 +63,22 @@ const Login = () => {
                             </div>
                         </div>
 
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white/50 dark:bg-slate-900/50 dark:text-white"
+                                    placeholder="••••••••"
+                                // Password optional for demo quick logins, but technically required for real users
+                                />
+                            </div>
+                        </div>
+
                         {error && (
                             <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm">
                                 {error}
@@ -80,6 +99,13 @@ const Login = () => {
                                 </>
                             )}
                         </button>
+
+                        <div className="text-center text-sm text-slate-500 dark:text-slate-400">
+                            Don't have an account?{' '}
+                            <Link to="/register" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
+                                Sign up
+                            </Link>
+                        </div>
                     </form>
 
                     <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/50">

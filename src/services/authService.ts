@@ -1,5 +1,6 @@
 import type { User } from '../types';
 
+/*
 const MOCK_USERS: User[] = [
     {
         id: '1',
@@ -34,27 +35,41 @@ const MOCK_USERS: User[] = [
         title: 'Engineering Manager'
     }
 ];
+*/
 
 export const AuthService = {
-    login: async (email: string): Promise<User> => {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                const user = MOCK_USERS.find(u => u.email === email);
-                if (user) {
-                    resolve(user);
-                } else {
-                    reject(new Error('Invalid credentials'));
-                }
-            }, 500); // Simulate network delay
+    login: async (email: string, password?: string): Promise<User> => {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
         });
+
+        if (!response.ok) {
+            throw new Error('Invalid credentials');
+        }
+
+        return response.json();
     },
 
     logout: async (): Promise<void> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve();
-            }, 200);
+        // In a real app, call logout endpoint
+        return Promise.resolve();
+    },
+
+    register: async (userData: any): Promise<User> => {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
         });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'Registration failed');
+        }
+
+        return response.json();
     },
 
     getCurrentUser: (): User | null => {

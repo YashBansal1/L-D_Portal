@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 import Dashboard from './pages/Dashboard';
 import BrowseTrainings from './pages/employee/BrowseTrainings';
 import AdminTrainings from './pages/admin/AdminTrainings';
@@ -13,6 +14,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>

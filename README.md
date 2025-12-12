@@ -42,16 +42,23 @@ A comprehensive L&D management system built with React, TypeScript, and Tailwind
    ```bash
    git clone <repository-url>
    ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
 
-### Running the App
-Start the development server:
+### 1. Start the Backend Server
+The backend must be running for the application to function.
 ```bash
+cd server
+npm install
+npm run start:dev
+```
+The server will run on `http://localhost:3000`.
+
+### 2. Start the Frontend
+In a new terminal:
+```bash
+npm install
 npm run dev
 ```
+The application will open at `http://localhost:5174`.
 
 ### Building for Production
 Create an optimized production build:
