@@ -22,7 +22,7 @@ export class AuthController {
             }
         }
     })
-    async login(@Body() body: { email: string; password?: string }) {
+    async login(@Body() body: { email: string; password?: string; isQuickLogin?: boolean }) {
         const user = await this.prisma.user.findUnique({
             where: { email: body.email }
         });
@@ -35,9 +35,23 @@ export class AuthController {
             throw new UnauthorizedException('Account access revoked');
         }
 
-        // If user has a password set, verify it ONLY if password is provided
-        // If no password provided, we allow "Quick Login" (Bypass) as requested
-        if (user.password && body.password) {
+        // Standard Login (Sign In Form) - Password Mandatory
+        if (!body.isQuickLogin) {
+            // If user has a password set, strictly require and verify it
+            if (user.password) {
+                if (!body.password) {
+                    throw new UnauthorizedException('Password required');
+                }
+                const isMatch = await bcrypt.compare(body.password, user.password);
+                if (!isMatch) {
+                    throw new UnauthorizedException('Invalid credentials');
+                }
+            }
+        }
+
+        // Quick Login - Password NOT mandatory (if button clicked)
+        // But if password IS provided even in quick login (unlikely but possible via API), verify it.
+        if (body.isQuickLogin && body.password && user.password) {
             const isMatch = await bcrypt.compare(body.password, user.password);
             if (!isMatch) {
                 throw new UnauthorizedException('Invalid credentials');

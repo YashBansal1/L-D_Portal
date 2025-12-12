@@ -38,23 +38,40 @@ async function verifyLoginSecurity() {
     }
     console.log('User registered.');
 
-    // 2. Attempt Login with NO Password (The Exploit)
-    console.log('2. Attempting Login with EMPTY password (Exploit)...');
-    const exploitResponse = await fetch('http://localhost:3000/auth/login', {
+    // 2a. Attempt Standard Login with EMPTY password (Should FAIL now)
+    console.log('2a. Attempting Standard Login with EMPTY password...');
+    const standardEmptyResponse = await fetch('http://localhost:3000/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             email: email,
-            password: '' // Sending empty password
+            password: ''
+            // isQuickLogin undefined/false
         })
     });
 
-    if (exploitResponse.status === 200) {
-        console.log('SUCCESS: Quick Login succeeded without password (as requested).');
-    } else if (exploitResponse.status === 401) {
-        console.error('FAIL: Quick Login rejected (401). Feature not working.');
+    if (standardEmptyResponse.status === 401) {
+        console.log('SUCCESS: Standard login rejected empty password (401).');
     } else {
-        console.log(`Other status: ${exploitResponse.status}`);
+        console.error(`FAIL: Standard login accepted empty password! Status: ${standardEmptyResponse.status}`);
+    }
+
+    // 2b. Attempt Quick Login with EMPTY password (Should SUCCEED)
+    console.log('2b. Attempting Quick Login with EMPTY password...');
+    const quickResponse = await fetch('http://localhost:3000/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email: email,
+            password: '',
+            isQuickLogin: true
+        })
+    });
+
+    if (quickResponse.status === 200) {
+        console.log('SUCCESS: Quick Login succeeded without password.');
+    } else {
+        console.error(`FAIL: Quick Login failed! Status: ${quickResponse.status}`);
     }
 
     // 3. Attempt Login with WRONG Password

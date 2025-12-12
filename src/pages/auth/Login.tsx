@@ -30,7 +30,7 @@ const Login = () => {
         setEmail(roleEmail);
         setPassword('');
         // Quick login users don't have passwords in mock DB
-        dispatch(login({ email: roleEmail }));
+        dispatch(login({ email: roleEmail, isQuickLogin: true }));
     };
 
     return (
