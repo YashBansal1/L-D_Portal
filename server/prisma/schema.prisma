@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  password    String       // Hashed password
+  name        String
+  role        String
+  department  String
+  
+  // Relations
+  profile     Profile?
+  enrollments Enrollment[]
+}
+
+model Profile {
+  id                 Int      @id @default(autoincrement())
+  bio                String?
+  avatar             String?
+  totalLearningHours Int      @default(0)
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id])
+}
+
+model Training {
+  id            String       @id @default(uuid())
+  title         String
+  description   String
+  instructor    String
+  startDate     DateTime
+  endDate       DateTime
+  durationHours Int
+  type          String       // 'technical' | 'soft-skills' | 'compliance'
+  format        String       // 'online' | 'offline' | 'hybrid'
+  maxSeats      Int
+  enrolled      Int          @default(0)
+  isMandatory   Boolean      @default(false)
+  status        String       // 'upcoming' | 'ongoing' | 'completed'
+  tags          String       // Store as comma-separated string for SQLite simplicity
+
+  // Relations
+  enrollments   Enrollment[]
+}
+
+model Enrollment {
+  id          String    @id @default(uuid())
+  userId      String
+  trainingId  String
+  status      String    // 'enrolled' | 'in-progress' | 'completed'
+  progress    Int       @default(0)
+  attendance  Int       @default(0)
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+
+  user        User      @relation(fields: [userId], references: [id])
+  training    Training  @relation(fields: [trainingId], references: [id])
+
+  @@unique([userId, trainingId])
+}

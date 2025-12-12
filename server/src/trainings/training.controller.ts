@@ -1,62 +1,184 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Query, HttpStatus, HttpCode } from '@nestjs/common';
-import { JsonDbService } from '../database/json-db.service';
+import { Controller, Get, Post, Body, Param, NotFoundException, ConflictException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { v4 as uuidv4 } from 'uuid';
 
+@ApiTags('Trainings')
 @Controller('trainings')
 export class TrainingController {
-    constructor(private dbService: JsonDbService) { }
+    constructor(private prisma: PrismaService) { }
 
     @Get()
+    @ApiOperation({ summary: 'Get all trainings' })
+    @ApiResponse({ status: 200, description: 'Return all trainings found' })
     async getTrainings() {
-        return this.dbService.trainings;
+        // We need to return trainings with their tags formatted as array if we stored them as string
+        const trainings = await this.prisma.training.findMany();
+        return trainings.map(t => ({
+            ...t,
+            tags: t.tags ? t.tags.split(',') : []
+        }));
     }
 
     @Post()
-    async create(@Body() training: any) {
-        const newTraining = {
-            ...training,
-            id: Math.random().toString(36).substr(2, 9),
-            enrolled: 0,
-            status: 'upcoming'
+    @ApiOperation({ summary: 'Create a new training' })
+    @ApiResponse({ status: 201, description: 'The training has been successfully created.' })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                title: { type: 'string', example: 'Advanced React' },
+                description: { type: 'string', example: 'Deep dive into patterns' },
+                instructor: { type: 'string', example: 'Sarah Drasner' },
+                startDate: { type: 'string', format: 'date-time' },
+                endDate: { type: 'string', format: 'date-time' },
+                durationHours: { type: 'number', example: 12 },
+                type: { type: 'string', example: 'technical' },
+                format: { type: 'string', example: 'online' },
+                maxSeats: { type: 'number', example: 30 },
+                tags: { type: 'array', items: { type: 'string' }, example: ['React', 'Frontend'] }
+            }
+        }
+    })
+    async createTraining(@Body() body: any) {
+        const newTraining = await this.prisma.training.create({
+            data: {
+                title: body.title,
+                description: body.description,
+                instructor: body.instructor,
+                startDate: new Date(body.startDate),
+                endDate: new Date(body.endDate),
+                durationHours: body.durationHours,
+                type: body.type,
+                format: body.format,
+                maxSeats: body.maxSeats,
+                isMandatory: body.isMandatory || false,
+                status: 'upcoming',
+                tags: Array.isArray(body.tags) ? body.tags.join(',') : body.tags
+            }
+        });
+
+        return {
+            ...newTraining,
+            tags: newTraining.tags ? newTraining.tags.split(',') : []
         };
-        this.dbService.trainings.push(newTraining);
-        await this.dbService.save();
-        return newTraining;
     }
 
     @Post(':id/enroll')
-    async enroll(@Param('id') id: string, @Body('userId') userId: string) {
-        const training = this.dbService.trainings.find(t => t.id === id);
-        if (training) {
-            training.enrolled += 1;
-            // Also update user progress
-            const enrollment = {
-                userId,
-                trainingId: id,
-                status: 'enrolled',
-                progress: 0,
-                attendance: 0,
-                enrolledAt: new Date().toISOString()
-            };
-            this.dbService.data.enrollments.push(enrollment);
-            await this.dbService.save();
+    @ApiOperation({ summary: 'Enroll a user in a training' })
+    @ApiParam({ name: 'id', description: 'Training ID' })
+    @ApiResponse({ status: 201, description: 'Enrollment successful' })
+    @ApiResponse({ status: 404, description: 'Training not found' })
+    @ApiResponse({ status: 409, description: 'User already enrolled' })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                userId: { type: 'string', example: 'user-uuid' }
+            }
         }
-        return { success: true };
+    })
+    async enroll(@Param('id') id: string, @Body() body: { userId: string }) {
+        const training = await this.prisma.training.findUnique({ where: { id } });
+        if (!training) throw new NotFoundException('Training not found');
+
+        const existingEnrollment = await this.prisma.enrollment.findUnique({
+            where: {
+                userId_trainingId: {
+                    userId: body.userId,
+                    trainingId: id
+                }
+            }
+        });
+
+        if (existingEnrollment) {
+            throw new ConflictException('User already enrolled');
+        }
+
+        // Transaction to increment enrolled count and create enrollment
+        const result = await this.prisma.$transaction(async (prisma) => {
+            await prisma.training.update({
+                where: { id },
+                data: { enrolled: { increment: 1 } }
+            });
+
+            return prisma.enrollment.create({
+                data: {
+                    userId: body.userId,
+                    trainingId: id,
+                    status: 'enrolled',
+                    progress: 0
+                }
+            });
+        });
+
+        return result;
     }
 
     @Get('user/:userId')
+    @ApiOperation({ summary: 'Get trainings for a specific user' })
+    @ApiParam({ name: 'userId', description: 'User ID' })
+    @ApiResponse({ status: 200, description: 'User trainings retrieved' })
     async getUserTrainings(@Param('userId') userId: string) {
-        return this.dbService.data.enrollments.filter(e => e.userId === userId);
+        const enrollments = await this.prisma.enrollment.findMany({
+            where: { userId },
+            include: { training: true }
+        });
+
+        return enrollments.map(e => ({
+            id: e.training.id,
+            title: e.training.title,
+            description: e.training.description,
+            instructor: e.training.instructor,
+            startDate: e.training.startDate,
+            endDate: e.training.endDate,
+            durationHours: e.training.durationHours,
+            type: e.training.type,
+            format: e.training.format,
+            maxSeats: e.training.maxSeats,
+            enrolled: e.training.enrolled,
+            isMandatory: e.training.isMandatory || false,
+            tags: e.training.tags ? e.training.tags.split(',') : [],
+            progress: e.progress,
+            attendance: e.attendance,
+            completionStatus: e.status
+        }));
     }
 
     @Post(':id/complete')
-    async complete(@Param('id') id: string, @Body('userId') userId: string) {
-        const enrollment = this.dbService.data.enrollments.find(e => e.userId === userId && e.trainingId === id);
-        if (enrollment) {
-            enrollment.status = 'completed';
-            enrollment.progress = 100;
-            enrollment.completedAt = new Date().toISOString();
-            await this.dbService.save();
+    @ApiOperation({ summary: 'Mark a training as completed' })
+    @ApiParam({ name: 'id', description: 'Training ID' })
+    @ApiResponse({ status: 201, description: 'Training marked as completed' })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                userId: { type: 'string', example: 'user-uuid' }
+            }
         }
-        return { newBadges: ['Bronze Badge'] }; // Mock badge return
+    })
+    async completeTraining(@Param('id') id: string, @Body() body: { userId: string }) {
+        const enrollment = await this.prisma.enrollment.update({
+            where: {
+                userId_trainingId: {
+                    userId: body.userId,
+                    trainingId: id
+                }
+            },
+            data: {
+                status: 'completed',
+                progress: 100,
+                completedAt: new Date()
+            }
+        });
+
+        const badges = [
+            { id: '1', name: 'Fast Learner', icon: 'zap', description: 'Completed training ahead of time' }
+        ];
+
+        return {
+            enrollment,
+            badges
+        };
     }
 }

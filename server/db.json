@@ -27,54 +27,6 @@
       "email": "manager@example.com",
       "role": "MANAGER",
       "department": "Engineering"
-    },
-    {
-      "id": "ghy48807l",
-      "name": "New Recruit",
-      "email": "recruit@example.com",
-      "password": "$2b$10$m2qPgC65W/AwwI./PzQZS.v/jVE/yu4r..6SXbpEsTvGh4ZTtvbtu",
-      "role": "EMPLOYEE",
-      "department": "Engineering",
-      "profile": {
-        "bio": "",
-        "avatar": "https://ui-avatars.com/api/?name=New Recruit",
-        "totalLearningHours": 0,
-        "completedTrainings": [],
-        "skills": [],
-        "badges": []
-      }
-    },
-    {
-      "id": "hhh4w6vor",
-      "name": "Flow Test",
-      "email": "flowtest@example.com",
-      "password": "$2b$10$.kbZdc8QEzIB3kokEdwXBupds30mGRW/MWjctQ4Xjl.Z108UkZUhS",
-      "role": "EMPLOYEE",
-      "department": "Sales",
-      "profile": {
-        "bio": "",
-        "avatar": "https://ui-avatars.com/api/?name=Flow Test",
-        "totalLearningHours": 0,
-        "completedTrainings": [],
-        "skills": [],
-        "badges": []
-      }
-    },
-    {
-      "id": "gjq2on4e5",
-      "name": "Yash Bansal",
-      "email": "yashbansal@gmail.com",
-      "password": "$2b$10$a.beKJB16ItzY1DGzBCEJeghTStuDa.JomxPKCFJML4J.QGwZnuYu",
-      "role": "EMPLOYEE",
-      "department": "Engineering",
-      "profile": {
-        "bio": "",
-        "avatar": "https://ui-avatars.com/api/?name=Yash Bansal",
-        "totalLearningHours": 0,
-        "completedTrainings": [],
-        "skills": [],
-        "badges": []
-      }
     }
   ],
   "trainings": [
@@ -89,7 +41,7 @@
       "type": "technical",
       "format": "online",
       "maxSeats": 30,
-      "enrolled": 27,
+      "enrolled": 25,
       "isMandatory": false,
       "status": "upcoming",
       "tags": [
@@ -97,71 +49,7 @@
         "Frontend",
         "JavaScript"
       ]
-    },
-    {
-      "title": "Java",
-      "description": "Basic",
-      "instructor": "Yash",
-      "startDate": "2025-12-10T08:31:00.000Z",
-      "endDate": "2025-12-03T08:31:00.000Z",
-      "durationHours": 24,
-      "type": "technical",
-      "format": "online",
-      "maxSeats": 20,
-      "isMandatory": true,
-      "tags": [
-        "Collections"
-      ],
-      "id": "x7s2idu0w",
-      "enrolled": 1,
-      "status": "upcoming"
-    },
-    {
-      "title": "Node",
-      "description": "Basic",
-      "instructor": "Yash",
-      "startDate": "2025-12-11T08:37:00.000Z",
-      "endDate": "2025-12-19T08:37:00.000Z",
-      "durationHours": 120,
-      "type": "technical",
-      "format": "online",
-      "maxSeats": 20,
-      "isMandatory": true,
-      "tags": [
-        "Basic"
-      ],
-      "id": "q70ylqaht",
-      "enrolled": 0,
-      "status": "upcoming"
     }
   ],
-  "enrollments": [
-    {
-      "userId": "1",
-      "trainingId": "1",
-      "status": "completed",
-      "progress": 100,
-      "attendance": 0,
-      "enrolledAt": "2025-12-12T08:29:24.942Z",
-      "completedAt": "2025-12-12T08:30:07.240Z"
-    },
-    {
-      "userId": "1",
-      "trainingId": "x7s2idu0w",
-      "status": "completed",
-      "progress": 100,
-      "attendance": 0,
-      "enrolledAt": "2025-12-12T08:32:24.746Z",
-      "completedAt": "2025-12-12T08:32:36.147Z"
-    },
-    {
-      "userId": "gjq2on4e5",
-      "trainingId": "1",
-      "status": "completed",
-      "progress": 100,
-      "attendance": 0,
-      "enrolledAt": "2025-12-12T08:44:41.972Z",
-      "completedAt": "2025-12-12T08:45:00.988Z"
-    }
-  ]
+  "enrollments": []
 }
