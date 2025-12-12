@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Param, NotFoundException, ConflictException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 
 @ApiTags('Trainings')
 @Controller('trainings')
+// force reload
 export class TrainingController {
     constructor(private prisma: PrismaService) { }
 
@@ -127,6 +128,7 @@ export class TrainingController {
 
         return enrollments.map(e => ({
             id: e.training.id,
+            trainingId: e.training.id,
             title: e.training.title,
             description: e.training.description,
             instructor: e.training.instructor,
@@ -141,7 +143,8 @@ export class TrainingController {
             tags: e.training.tags ? e.training.tags.split(',') : [],
             progress: e.progress,
             attendance: e.attendance,
-            completionStatus: e.status
+            completionStatus: e.status,
+            status: e.status
         }));
     }
 
@@ -169,16 +172,96 @@ export class TrainingController {
                 status: 'completed',
                 progress: 100,
                 completedAt: new Date()
+            },
+            include: {
+                training: true
             }
         });
 
-        const badges = [
-            { id: '1', name: 'Fast Learner', icon: 'zap', description: 'Completed training ahead of time' }
-        ];
+        const badge = await this.prisma.badge.create({
+            data: {
+                name: 'Course Champion',
+                icon: 'award',
+                description: `Successfully completed ${enrollment.training.title}`,
+                userId: body.userId
+            }
+        });
 
         return {
             enrollment,
-            badges
+            badges: [badge]
         };
+    }
+    @Put(':id')
+    @ApiOperation({ summary: 'Update a training' })
+    @ApiParam({ name: 'id', description: 'Training ID' })
+    @ApiResponse({ status: 200, description: 'Training updated' })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                title: { type: 'string', example: 'Updated Title' },
+                startDate: { type: 'string' },
+                endDate: { type: 'string' },
+                tags: { type: 'array', items: { type: 'string' } }
+            }
+        }
+    })
+    async updateTraining(@Param('id') id: string, @Body() body: any) {
+        const { id: _, ...data } = body;
+        if (data.startDate) data.startDate = new Date(data.startDate);
+        if (data.endDate) data.endDate = new Date(data.endDate);
+        if (data.tags && Array.isArray(data.tags)) data.tags = data.tags.join(',');
+
+        return this.prisma.training.update({
+            where: { id },
+            data
+        });
+    }
+
+    @Delete(':id')
+    @ApiOperation({ summary: 'Delete a training' })
+    @ApiParam({ name: 'id', description: 'Training ID' })
+    @ApiResponse({ status: 200, description: 'Training deleted' })
+    async deleteTraining(@Param('id') id: string) {
+        return this.prisma.$transaction(async (prisma) => {
+            await prisma.enrollment.deleteMany({
+                where: { trainingId: id }
+            });
+            return prisma.training.delete({
+                where: { id }
+            });
+        });
+    }
+
+    @Post(':id/assign')
+    @ApiOperation({ summary: 'Assign training to specific users' })
+    @ApiParam({ name: 'id', description: 'Training ID' })
+    @ApiResponse({ status: 201, description: 'Users assigned' })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                userIds: { type: 'array', items: { type: 'string' } }
+            }
+        }
+    })
+    async assignTraining(@Param('id') id: string, @Body() body: { userIds: string[] }) {
+        const { userIds } = body;
+
+        const operations = userIds.map(userId => {
+            return this.prisma.enrollment.upsert({
+                where: { userId_trainingId: { userId, trainingId: id } },
+                update: {},
+                create: { userId, trainingId: id, status: 'assigned', progress: 0 }
+            });
+        });
+
+        await this.prisma.$transaction(operations);
+
+        const count = await this.prisma.enrollment.count({ where: { trainingId: id } });
+        await this.prisma.training.update({ where: { id }, data: { enrolled: count } });
+
+        return { message: 'Assignments processed' };
     }
 }

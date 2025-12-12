@@ -1,8 +1,4 @@
 import type { Training, UserTrainingProgress } from '../types';
-import { MOCK_PROFILES } from './userService';
-
-const MOCK_TRAININGS: Training[] = [];
-const MOCK_PROGRESS: UserTrainingProgress[] = [];
 
 export const TrainingService = {
     getTrainings: async (): Promise<Training[]> => {
@@ -37,9 +33,12 @@ export const TrainingService = {
     },
 
     assignTraining: async (trainingId: string, userIds: string[]): Promise<void> => {
-        // Implement assignment endpoint on backend if needed, skipping for MVP or implement simple mock logic on backend
-        console.warn('Assign API not implemented on backend yet');
-        return Promise.resolve();
+        const response = await fetch(`/api/trainings/${trainingId}/assign`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userIds })
+        });
+        if (!response.ok) throw new Error('Failed to assign training');
     },
 
     completeTraining: async (userId: string, trainingId: string): Promise<{ newBadges: string[] }> => {
@@ -53,14 +52,19 @@ export const TrainingService = {
     },
 
     updateTraining: async (training: Training): Promise<Training> => {
-        // API not implemented in basic backend
-        console.warn('Update API not implemented');
-        return Promise.resolve(training);
+        const response = await fetch(`/api/trainings/${training.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(training)
+        });
+        if (!response.ok) throw new Error('Failed to update training');
+        return response.json();
     },
 
     deleteTraining: async (trainingId: string): Promise<void> => {
-        // API not implemented in basic backend
-        console.warn('Delete API not implemented');
-        return Promise.resolve();
+        const response = await fetch(`/api/trainings/${trainingId}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) throw new Error('Failed to delete training');
     }
 };

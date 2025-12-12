@@ -17,8 +17,18 @@ const AdminTrainings = () => {
     }, [dispatch]);
 
     const handleDelete = async (id: string) => {
+        console.log('Delete clicked for training:', id);
         if (window.confirm('Are you sure you want to delete this training?')) {
-            await dispatch(deleteTraining(id));
+            console.log('User confirmed delete');
+            try {
+                await dispatch(deleteTraining(id)).unwrap();
+                console.log('Delete successful');
+                // Refresh the list after successful deletion
+                dispatch(fetchTrainings());
+            } catch (error) {
+                console.error('Delete failed:', error);
+                alert('Failed to delete training. Please try again.');
+            }
         }
     };
 

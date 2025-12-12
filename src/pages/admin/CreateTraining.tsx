@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { createTraining, updateTraining } from '../../store/trainingSlice';
+import { createTraining, updateTraining, fetchTrainings } from '../../store/trainingSlice';
 import { useNavigate, useParams } from 'react-router-dom';
 import { X } from 'lucide-react';
 
@@ -25,6 +25,12 @@ const CreateTraining = () => {
         isMandatory: false,
         tags: '',
     });
+
+    useEffect(() => {
+        if (!trainings.length) {
+            dispatch(fetchTrainings());
+        }
+    }, [dispatch, trainings.length]);
 
     useEffect(() => {
         if (isEdit && id) {
@@ -58,19 +64,32 @@ const CreateTraining = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const trainingData = {
-            ...formData,
-            tags: formData.tags.split(',').map(tag => tag.trim()),
-            startDate: new Date(formData.startDate).toISOString(),
-            endDate: new Date(formData.endDate).toISOString(),
-        };
+        console.log('Submitting training form...', { isEdit, id, formData });
 
-        if (isEdit && id) {
-            await dispatch(updateTraining({ ...trainingData, id } as any));
-        } else {
-            await dispatch(createTraining(trainingData));
+        try {
+            const trainingData = {
+                ...formData,
+                tags: formData.tags.split(',').map(tag => tag.trim()),
+                startDate: new Date(formData.startDate).toISOString(),
+                endDate: new Date(formData.endDate).toISOString(),
+            };
+
+            if (isEdit && id) {
+                console.log('Updating training:', trainingData);
+                await dispatch(updateTraining({ ...trainingData, id } as any)).unwrap();
+                console.log('Update successful');
+            } else {
+                console.log('Creating training:', trainingData);
+                await dispatch(createTraining(trainingData)).unwrap();
+                console.log('Creation successful');
+            }
+            // Refresh list to ensure up-to-date data
+            dispatch(fetchTrainings());
+            navigate('/admin/trainings');
+        } catch (error) {
+            console.error('Failed to save training:', error);
+            alert(`Failed to save training: ${error}`);
         }
-        navigate('/admin/trainings');
     };
 
     return (

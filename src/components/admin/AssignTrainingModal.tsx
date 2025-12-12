@@ -24,12 +24,15 @@ const AssignTrainingModal: React.FC<AssignTrainingModalProps> = ({ training, onC
         dispatch(fetchDepartments());
     }, [dispatch]);
 
+    // Filter users to only show employees (not admins, super admins, or managers)
+    const employeesOnly = users.filter(u => u.role === 'EMPLOYEE');
+
     // Handle "Select All" logic when type is 'all'
     const getUserIdsToAssign = () => {
         if (assignType === 'all') {
-            return users.map(u => u.id);
+            return employeesOnly.map(u => u.id);
         } else if (assignType === 'department') {
-            return users.filter(u => u.department === selectedDepartment).map(u => u.id);
+            return employeesOnly.filter(u => u.department === selectedDepartment).map(u => u.id);
         } else {
             return selectedUsers;
         }
@@ -98,14 +101,14 @@ const AssignTrainingModal: React.FC<AssignTrainingModalProps> = ({ training, onC
 
                             {assignType === 'users' && (
                                 <div className="space-y-2 max-h-60 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-lg p-2">
-                                    {users.map(user => (
+                                    {employeesOnly.map(user => (
                                         <div key={user.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg cursor-pointer" onClick={() => toggleUserSelection(user.id)}>
                                             <div className={`w-5 h-5 rounded border flex items-center justify-center ${selectedUsers.includes(user.id) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}`}>
                                                 {selectedUsers.includes(user.id) && <CheckCircle size={14} className="text-white" />}
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium">{user.name}</p>
-                                                <p className="text-xs text-slate-500">{user.role} • {user.department}</p>
+                                                <p className="text-xs text-slate-500">{user.department}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -131,7 +134,7 @@ const AssignTrainingModal: React.FC<AssignTrainingModalProps> = ({ training, onC
                             {assignType === 'all' && (
                                 <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center gap-3 text-indigo-800 dark:text-indigo-300">
                                     <Users size={24} />
-                                    <p className="text-sm">This will assign the training to all <strong>{users.length}</strong> employees in the system.</p>
+                                    <p className="text-sm">This will assign the training to all <strong>{employeesOnly.length}</strong> employees in the system.</p>
                                 </div>
                             )}
                         </div>

@@ -21,6 +21,17 @@ model User {
   // Relations
   profile     Profile?
   enrollments Enrollment[]
+  badges      Badge[]
+}
+
+model Badge {
+  id          String   @id @default(uuid())
+  name        String
+  icon        String
+  description String
+  awardedAt   DateTime @default(now())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Profile {
