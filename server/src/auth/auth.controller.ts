@@ -31,29 +31,16 @@ export class AuthController {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        // If user has a password set (newly registered), verify it
-        if (user.password) {
-            if (!body.password) {
-                // For quick login of mock users, we might skip if password is safe-mock
-                // But strictly, we should require it.
-                // However, for existing mock users, specific password check might be annoying if we didn't document it.
-                // Let's assume for now mock users might use quick login without password if frontend calls it so.
-                // But wait, frontend logic sends password='' for quick login.
+        if (!user.isActive) {
+            throw new UnauthorizedException('Account access revoked');
+        }
 
-                // If the password in DB is the "mock" hash I inserted, maybe I should allow bypass?
-                // No, let's enforce password if provided, or handle "quick login" logic if we want.
-                // For simplified behavior matching previous logic:
-                if (!body.password && !user.password.startsWith('$2b$')) {
-                    // Pass through for "password-less" legacy mocks if any? No, I seeded all with hash.
-                    throw new UnauthorizedException('Password required');
-                }
-            }
-
-            if (body.password) {
-                const isMatch = await bcrypt.compare(body.password, user.password);
-                if (!isMatch) {
-                    throw new UnauthorizedException('Invalid credentials');
-                }
+        // If user has a password set, verify it ONLY if password is provided
+        // If no password provided, we allow "Quick Login" (Bypass) as requested
+        if (user.password && body.password) {
+            const isMatch = await bcrypt.compare(body.password, user.password);
+            if (!isMatch) {
+                throw new UnauthorizedException('Invalid credentials');
             }
         }
 

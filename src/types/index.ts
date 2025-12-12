@@ -1,4 +1,5 @@
 export type Role = 'EMPLOYEE' | 'ADMIN' | 'SUPER_ADMIN' | 'MANAGER';
+export type UserRole = Role;
 
 export interface User {
     id: string;
@@ -8,6 +9,7 @@ export interface User {
     avatarUrl?: string;
     department?: string;
     title?: string;
+    isActive?: boolean;
 }
 
 export interface AuthState {

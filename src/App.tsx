@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import BrowseTrainings from './pages/employee/BrowseTrainings';
 import AdminTrainings from './pages/admin/AdminTrainings';
 import CreateTraining from './pages/admin/CreateTraining';
+import AdminUsers from './pages/admin/AdminUsers';
 import ManagerDashboard from './components/dashboard/ManagerDashboard';
 
 function App() {
@@ -26,7 +27,7 @@ function App() {
             <Route path="/admin/trainings/new" element={<CreateTraining />} />
             <Route path="/admin/trainings/edit/:id" element={<CreateTraining />} />
 
-            <Route path="/admin/users" element={<div>Admin Users Placeholder</div>} />
+            <Route path="/admin/users" element={<AdminUsers />} />
 
             {/* Manager Routes */}
             <Route path="/manager/dashboard" element={<ManagerDashboard />} />

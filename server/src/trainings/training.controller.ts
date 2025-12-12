@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 @ApiTags('Trainings')
 @Controller('trainings')
-// force reload
+// force reload 2
 export class TrainingController {
     constructor(private prisma: PrismaService) { }
 
@@ -178,6 +178,7 @@ export class TrainingController {
             }
         });
 
+        // Award Badges
         const badge = await this.prisma.badge.create({
             data: {
                 name: 'Course Champion',
@@ -186,6 +187,36 @@ export class TrainingController {
                 userId: body.userId
             }
         });
+
+        // Update Skills
+        if (enrollment.training.tags) {
+            const trainingTags = enrollment.training.tags.split(',').map(t => t.trim()).filter(t => t);
+
+            const userProfile = await this.prisma.profile.findUnique({
+                where: { userId: body.userId }
+            });
+
+            if (userProfile) {
+                const currentSkills = userProfile.skills ? userProfile.skills.split(',').map(s => s.trim()) : [];
+                const newSkills = [...new Set([...currentSkills, ...trainingTags])]; // Unique skills
+
+                await this.prisma.profile.update({
+                    where: { userId: body.userId },
+                    data: {
+                        skills: newSkills.join(',')
+                    }
+                });
+            } else {
+                // Should exist, but handle just in case or create? Profile usually created on registration.
+                await this.prisma.profile.create({
+                    data: {
+                        userId: body.userId,
+                        skills: trainingTags.join(','),
+                        totalLearningHours: 0
+                    }
+                });
+            }
+        }
 
         return {
             enrollment,

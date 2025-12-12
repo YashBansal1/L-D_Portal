@@ -1,4 +1,4 @@
-import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Param, NotFoundException, Patch, Body } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
@@ -18,6 +18,7 @@ export class UsersController {
                 name: true,
                 role: true,
                 department: true,
+                isActive: true,
                 profile: true
             }
         });
@@ -45,7 +46,7 @@ export class UsersController {
 
         return {
             ...userWithoutPassword,
-            skills: [], // Placeholder until schema update
+            skills: user.profile?.skills ? user.profile.skills.split(',') : [],
             certifications: [], // Placeholder
             badges: user.badges || [],
             totalLearningHours: user.profile?.totalLearningHours || 0,
@@ -89,5 +90,57 @@ export class UsersController {
             ...u,
             progress: 0 // Mock progress for dashboard view until we aggregate Enrollments
         }));
+    }
+
+    @Patch(':id/access')
+    @ApiOperation({ summary: 'Toggle user access (Revoke/Restore)' })
+    @ApiParam({ name: 'id', description: 'User ID' })
+    @ApiResponse({ status: 200, description: 'User access updated' })
+    async toggleUserAccess(@Param('id') id: string) {
+        const user = await this.prisma.user.findUnique({ where: { id } });
+        if (!user) throw new NotFoundException('User not found');
+
+        const updatedUser = await this.prisma.user.update({
+            where: { id },
+            data: { isActive: !user.isActive },
+            select: {
+                id: true,
+                email: true,
+                isActive: true
+            }
+        });
+
+        return updatedUser;
+    }
+
+    @Patch(':id')
+    @ApiOperation({ summary: 'Update user details' })
+    @ApiParam({ name: 'id', description: 'User ID' })
+    @ApiResponse({ status: 200, description: 'User updated successfully' })
+    async updateUser(
+        @Param('id') id: string,
+        @Body() data: { name?: string; role?: string; department?: string }
+    ) {
+        const user = await this.prisma.user.findUnique({ where: { id } });
+        if (!user) throw new NotFoundException('User not found');
+
+        const updatedUser = await this.prisma.user.update({
+            where: { id },
+            data: {
+                name: data.name,
+                role: data.role,
+                department: data.department
+            },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+                department: true,
+                isActive: true
+            }
+        });
+
+        return updatedUser;
     }
 }

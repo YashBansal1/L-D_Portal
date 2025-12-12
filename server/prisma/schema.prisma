@@ -22,6 +22,7 @@ model User {
   profile     Profile?
   enrollments Enrollment[]
   badges      Badge[]
+  isActive    Boolean      @default(true)
 }
 
 model Badge {
@@ -41,6 +42,7 @@ model Profile {
   totalLearningHours Int      @default(0)
   userId             String   @unique
   user               User     @relation(fields: [userId], references: [id])
+  skills             String?  // Comma-separated skills
 }
 
 model Training {

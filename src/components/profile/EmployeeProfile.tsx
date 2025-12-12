@@ -85,7 +85,7 @@ const EmployeeProfile = () => {
                     {completedTrainings.length > 0 ? (
                         <ul className="space-y-3">
                             {completedTrainings.map(cert => (
-                                <li key={cert.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg transition-colors border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900">
+                                <li key={cert.id} className="flex flex-col gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg transition-colors border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900">
                                     <div className="flex items-start gap-2 text-sm font-medium">
                                         <div className="w-2 h-2 rounded-full bg-green-500 shrink-0 mt-1.5"></div>
                                         <span className="leading-snug text-slate-700 dark:text-slate-200">{cert.title}</span>
@@ -96,7 +96,7 @@ const EmployeeProfile = () => {
                                             date: cert.completedAt,
                                             duration: cert.durationHours
                                         })}
-                                        className="self-end sm:self-auto shrink-0 text-xs flex items-center gap-1 text-indigo-600 hover:text-indigo-800 px-3 py-1.5 bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-900/50 rounded-md shadow-sm hover:shadow transition-all"
+                                        className="self-start shrink-0 text-xs flex items-center gap-1 text-indigo-600 hover:text-indigo-800 px-3 py-1.5 bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-900/50 rounded-md shadow-sm hover:shadow transition-all"
                                     >
                                         <FileText size={14} /> Certificate
                                     </button>
