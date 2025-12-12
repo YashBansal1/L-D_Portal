@@ -51,6 +51,8 @@ npm run dev
 
 Open your browser and navigate to the URL shown in the Frontend terminal (e.g., `http://localhost:5173`).
 
+![Application Screenshot](assets/app_screenshot.png)
+
 ## Troubleshooting
 
 ### "Port already in use"
